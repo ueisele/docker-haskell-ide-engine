@@ -5,6 +5,10 @@ ARG HASKELL_VERSION=8.8.1
 
 FROM haskell:${BUILDER_HASKELL_VERSION} AS builder
 
+ARG BUILDER_HASKELL_VERSION
+ARG BUILDER_STACK_VERSION
+ARG HIE_VERSION
+
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -39,7 +43,7 @@ FROM haskell:${HASKELL_VERSION}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get -y upgrade \
-    && apt-get -y install --no-install-recommends apt-utils 2>&1
+    && apt-get -y install --no-install-recommends apt-utils procps wget 2>&1
 
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
@@ -49,6 +53,13 @@ RUN stack upgrade
 
 # Copy haskell ide engine from build container
 COPY --from=builder /root/.local/bin/hie /root/.local/bin/
+
+# Install Docker CE Cli
+RUN apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common lsb-release \
+    && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | (OUT=$(apt-key add - 2>&1) || echo $OUT) \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli
 
 # Clean up
 RUN apt-get autoremove -y \
