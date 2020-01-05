@@ -1,82 +1,77 @@
-ARG HASKELL_FEATURE_VERSION=8.6
-ARG HASKELL_VERSION=${HASKELL_FEATURE_VERSION}.5
+FROM debian:stretch-slim
+
+ARG GHC_MAIN_VERSION=8.6
+ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
+ARG STACK_RESOLVER=lts-14.20
 ARG STACK_VERSION=2.1.3
+ARG STACK_ROOT=/root/.stack
 ARG HIE_VERSION=0.14.0.0
 
-## HIE Builder
-
-FROM haskell:${HASKELL_VERSION} AS builder
-
-ARG HASKELL_VERSION
-ARG STACK_VERSION
-ARG HIE_VERSION
-
-# Configure apt
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update \
-    && apt-get -y upgrade \
-    && apt-get -y install --no-install-recommends apt-utils 2>&1
-
-# Install haskell ide engine dependencies
-RUN apt-get -y install libicu-dev libtinfo-dev libgmp-dev
 
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
 
-# Upgrade stack
-RUN stack upgrade --binary-version="${STACK_VERSION}"
-
-# Install haskell ide engine
-RUN git clone https://github.com/haskell/haskell-ide-engine.git --recurse-submodules \
-    && cd haskell-ide-engine \
-    && git checkout ${HIE_VERSION} \
-    && stack install.hs stack-hie-${HASKELL_VERSION}
-
-# Clean up
-RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-ENV DEBIAN_FRONTEND=dialog
-
-
-## Haskell GHC with HIE Docker image
-
-FROM haskell:${HASKELL_VERSION}
-
-ARG STACK_VERSION
-ARG HASKELL_VERSION
-ARG HASKELL_FEATURE_VERSION
+# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries.
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
 
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-    && apt-get -y upgrade \
-    && apt-get -y install --no-install-recommends apt-utils procps wget 2>&1
-
-# Install Docker CE Cli
-RUN apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common lsb-release \
+    && apt-get -y upgrade --no-install-recommends \
+    # Install common tools, Docker cli and Haskell IDE engine dependencies
+    && apt-get -y install --no-install-recommends \
+        apt-utils procps dnsutils netbase net-tools telnet wget curl dirmngr less vim git \
+        g++ gcc make xz-utils libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev  \
+        gnupg gnupg-agent openssh-client ca-certificates apt-transport-https software-properties-common lsb-release \
+    # Install Docker Cli
     && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | (OUT=$(apt-key add - 2>&1) || echo $OUT) \
     && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" \
     && apt-get update \
-    && apt-get install -y docker-ce-cli
-
-# Create symlink bind directory for build or haskell ide engine
-RUN mkdir -p $HOME/.local/bin
-
-# Upgrade stack
-RUN stack upgrade --binary-version="${STACK_VERSION}"
-
-# Copy haskell ide engine from build container
-COPY --from=builder /root/.local/bin/hie-${HASKELL_VERSION} /root/.local/bin/
-COPY --from=builder /root/.local/bin/hie-wrapper /root/.local/bin/
-RUN ln -s /root/.local/bin/hie-${HASKELL_VERSION} /root/.local/bin/hie \
-    && ln -s /root/.local/bin/hie-${HASKELL_VERSION} /root/.local/bin/hie-${HASKELL_FEATURE_VERSION}
-
-# Clean up
-RUN apt-get autoremove -y \
+    && apt-get -y install --no-install-recommends docker-ce-cli \
+    # Clean up
+    && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
+
+
+# Install stack
+RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v$STACK_VERSION/stack-$STACK_VERSION-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C /usr/bin '*/stack'
+
+# Use 'stack' to install basic Haskell tools like alex, happy, and cpphs. We
+# remove most of the STACK_ROOT afterward to save space, but keep the 'share'
+# files that some of these tools require.
+RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
+        cabal-install happy alex cpphs gtk2hs-buildtools hscolour hlint hindent \
+    && cabal v2-update \    
+    && rm -rf $STACK_ROOT
+
+# Install haskell ide engine
+RUN cd /opt \
+    && git clone https://github.com/haskell/haskell-ide-engine.git --recurse-submodules \
+    && cd haskell-ide-engine \
+    && git checkout ${HIE_VERSION} \
+    && sed -i "s|resolver:.\+|resolver: ${STACK_RESOLVER} # GHC ${GHC_VERSION}|g" install/shake.yaml \
+    && sed -i "s|resolver:.\+|resolver: ${STACK_RESOLVER} # GHC ${GHC_VERSION}|g" stack-${GHC_VERSION}.yaml \
+    && sed -i "s|resolver:.\+|resolver: ${STACK_RESOLVER} # GHC ${GHC_VERSION}|g" stack.yaml \
+    && stack ./install.hs stack-hie-${GHC_VERSION} \
+    && stack ./install.hs stack-build-data \
+    && stack clean \
+    && rm -rf $STACK_ROOT \
+    && rm /root/.local/bin/hie* \
+    && ln -s $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
+    && ln -s $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
+    && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
+    && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
+
+# Finally setup stack
+RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION}
+RUN stack config set system-ghc --global true \
+    && stack config set install-ghc --global false \
+    # set the resolver
+    && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
 
 # Set the default shell to bash rather than sh
 ENV SHELL /bin/bash
