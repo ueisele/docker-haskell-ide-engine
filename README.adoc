@@ -1,3 +1,6 @@
 = Dockerfile for Haskell IDE Engine
 
-Docker Hub: https://hub.docker.com/r/ueisele/haskell-hie
+
+|===
+| *Docker Hub* | https://hub.docker.com/r/ueisele/haskell-stack-hie
+| *VS Code Remote Extension Template* | https://github.com/ueisele/vscode-dev-containers/tree/master/haskell

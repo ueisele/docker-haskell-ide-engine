@@ -88,7 +88,7 @@ RUN stack config set system-ghc --global true \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
 
-# Install pid' init daemon
+# Install pid1 init daemon
 RUN wget -qO- https://github.com/fpco/pid1/releases/download/v${PID1_VERSION}/pid1-${PID1_VERSION}-linux-x86_64.tar.gz | tar xz -C /usr/local
 
 # Set up pid1 entrypoint and default command
