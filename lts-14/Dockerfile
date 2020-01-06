@@ -1,5 +1,14 @@
 FROM debian:stretch-slim
 
+ARG BUILD_TIMESTAMP
+ARG SOURCE_GIT_REPOSITORY
+ARG SOURCE_GIT_COMMIT
+
+LABEL maintainer="code@uweeisele.eu" \
+      build.timestamp=${BUILD_TIMESTAMP} \
+      source.git.repository=${SOURCE_GIT_REPOSITORY} \
+      source.git.commit=${SOURCE_GIT_COMMIT}
+
 ARG GHC_MAIN_VERSION=8.6
 ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
 ARG STACK_RESOLVER=lts-14.20
@@ -7,11 +16,15 @@ ARG STACK_VERSION=2.1.3
 ARG STACK_ROOT=/root/.stack
 ARG HIE_VERSION=0.14.0.0
 
+LABEL ghc.version=${GHC_VERSION} \
+      stack.resolver=${STACK_RESOLVER} \
+      stack.version=${STACK_VERSION} \
+      hie.version=${HIE_VERSION}
 
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
 
-# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries.
+# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
@@ -20,7 +33,7 @@ ENV LANG=C.UTF-8 \
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get -y upgrade --no-install-recommends \
-    # Install common tools, Docker cli and Haskell IDE engine dependencies
+    # Install common tools, Docker cli dependecies and Haskell IDE engine dependencies
     && apt-get -y install --no-install-recommends \
         apt-utils procps dnsutils netbase net-tools telnet wget curl dirmngr less vim git \
         g++ gcc make xz-utils libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev  \
@@ -38,14 +51,13 @@ ENV DEBIAN_FRONTEND=dialog
 
 
 # Install stack
-RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v$STACK_VERSION/stack-$STACK_VERSION-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C /usr/bin '*/stack'
+RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${STACK_VERSION}/stack-${STACK_VERSION}-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C /usr/bin '*/stack'
 
-# Use 'stack' to install basic Haskell tools like alex, happy, and cpphs. We
-# remove most of the STACK_ROOT afterward to save space, but keep the 'share'
-# files that some of these tools require.
+# Use 'stack' to install basic Haskell tools like cabal, alex and happy
 RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
         cabal-install happy alex cpphs gtk2hs-buildtools hscolour hlint hindent \
-    && cabal v2-update \    
+    && cabal v2-update \
+    # Clean up  
     && rm -rf $STACK_ROOT
 
 # Install haskell ide engine
@@ -58,6 +70,7 @@ RUN cd /opt \
     && sed -i "s|resolver:.\+|resolver: ${STACK_RESOLVER} # GHC ${GHC_VERSION}|g" stack.yaml \
     && stack ./install.hs stack-hie-${GHC_VERSION} \
     && stack ./install.hs stack-build-data \
+    # Clean up
     && stack clean \
     && rm -rf $STACK_ROOT \
     && rm /root/.local/bin/hie* \
@@ -73,6 +86,6 @@ RUN stack config set system-ghc --global true \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
 
-# Set the default shell to bash rather than sh
+# Set the default shell to bash
 ENV SHELL /bin/bash
 ENTRYPOINT /bin/bash
