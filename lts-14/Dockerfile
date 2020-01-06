@@ -1,11 +1,9 @@
 FROM debian:stretch-slim
 
-ARG BUILD_TIMESTAMP
 ARG SOURCE_GIT_REPOSITORY
 ARG SOURCE_GIT_COMMIT
 
 LABEL maintainer="code@uweeisele.eu" \
-      build.timestamp=${BUILD_TIMESTAMP} \
       source.git.repository=${SOURCE_GIT_REPOSITORY} \
       source.git.commit=${SOURCE_GIT_COMMIT}
 
@@ -14,7 +12,8 @@ ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
 ARG STACK_RESOLVER=lts-14.20
 ARG STACK_VERSION=2.1.3
 ARG STACK_ROOT=/root/.stack
-ARG HIE_VERSION=0.14.0.0
+ARG HIE_VERSION=1.0.0.0
+ARG PID1_VERSION=0.1.2.0
 
 LABEL ghc.version=${GHC_VERSION} \
       stack.resolver=${STACK_RESOLVER} \
@@ -32,7 +31,6 @@ ENV LANG=C.UTF-8 \
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-    && apt-get -y upgrade --no-install-recommends \
     # Install common tools, Docker cli dependecies and Haskell IDE engine dependencies
     && apt-get -y install --no-install-recommends \
         apt-utils procps dnsutils netbase net-tools telnet wget curl dirmngr less vim git \
@@ -86,6 +84,9 @@ RUN stack config set system-ghc --global true \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
 
-# Set the default shell to bash
-ENV SHELL /bin/bash
-ENTRYPOINT /bin/bash
+# Install pid' init daemon
+RUN wget -qO- https://github.com/fpco/pid1/releases/download/v${PID1_VERSION}/pid1-${PID1_VERSION}-linux-x86_64.tar.gz | tar xz -C /usr/local
+
+# Set up pid1 entrypoint and default command
+ENTRYPOINT ["/usr/local/sbin/pid1"]
+CMD ["/bin/bash"]

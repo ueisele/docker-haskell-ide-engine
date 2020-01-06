@@ -55,16 +55,17 @@ function parseCmd () {
     return 0
 }
 
-function buildTimestamp() {
-    date --utc -u +'%Y%m%dT%H%M%Z'
-}
-
 function resolveRepo () {
     git config --get remote.origin.url
 }
 
 function resolveCommit () {
     git rev-list --abbrev-commit --abbrev=7 -1 master ${DOCKERFILE_DIR}
+}
+
+function resolveBuildTimestamp() {
+    local created=$(docker inspect --format "{{ index .Created }}" "${DOCKERIMAGE_REPO}:${DOCKERFILE_DIR}")
+    date --utc -d "${created}" +'%Y%m%dT%H%M%Z'
 }
 
 function resolveImageLabel () {
@@ -76,9 +77,10 @@ function resolveImageLabel () {
 
 function resolveImageTags () {
     local resolver=$(resolveImageLabel "stack.resolver")
-    local timestamp=$(resolveImageLabel "build.timestamp")
+    local hie=$(resolveImageLabel "hie.version")
+    local timestamp=$(resolveBuildTimestamp)
     local commit=$(resolveImageLabel "source.git.commit")
-    echo "${resolver}" "${resolver}-${timestamp}-${commit}"
+    echo "${resolver}" "${resolver}-${hie}" "${resolver}-${hie}-${timestamp}-${commit}"
 }
 
 function build () {
@@ -86,7 +88,6 @@ function build () {
     cd $ROOT_DIR
     docker build -t ${DOCKERIMAGE_REPO}:${DOCKERFILE_DIR} \
         -f ${DOCKERFILE_DIR}/Dockerfile \
-        --build-arg BUILD_TIMESTAMP=$(buildTimestamp) \
         --build-arg SOURCE_GIT_REPOSITORY=$(resolveRepo) \
         --build-arg SOURCE_GIT_COMMIT=$(resolveCommit) \
         ${DOCKERFILE_DIR}
