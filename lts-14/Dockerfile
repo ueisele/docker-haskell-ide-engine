@@ -53,8 +53,12 @@ RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${ST
 
 # Use 'stack' to install basic Haskell tools like cabal, alex and happy
 RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
-        cabal-install happy alex cpphs gtk2hs-buildtools hscolour hlint hindent \
+        cabal-install happy alex cpphs hscolour hlint hindent \
+    # Update Cabal index
     && cabal v2-update \
+    # Configure hlint
+    && mkdir /root/.local/bin/data \
+    && touch /root/.local/bin/data/hlint.yaml \
     # Clean up  
     && rm -rf $STACK_ROOT
 
@@ -72,8 +76,8 @@ RUN cd /opt \
     && stack clean \
     && rm -rf $STACK_ROOT \
     && rm /root/.local/bin/hie* \
-    && ln -s $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
-    && ln -s $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
+    && mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
+    && mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
