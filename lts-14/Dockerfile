@@ -53,7 +53,12 @@ RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${ST
 
 # Use 'stack' to install basic Haskell tools like cabal, alex and happy
 RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
-        cabal-install happy alex cpphs hscolour hlint hindent \
+        # Inastall tool cabal
+        cabal-install \ 
+        # Haskell GHCI VS Code Debug Adapter (https://marketplace.visualstudio.com/items?itemName=phoityne.phoityne-vscode)
+        phoityne-vscode haskell-dap \
+        # Other Haskell tools
+        happy alex cpphs hscolour hlint hindent \
     # Update Cabal index
     && cabal v2-update \
     # Configure hlint
@@ -73,11 +78,10 @@ RUN cd /opt \
     && stack ./install.hs stack-hie-${GHC_VERSION} \
     && stack ./install.hs stack-build-data \
     # Clean up
-    && stack clean \
+    && rm -rf /opt/haskell-ide-engine \
     && rm -rf $STACK_ROOT \
-    && rm /root/.local/bin/hie* \
-    && mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
-    && mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
+    && rm /root/.local/bin/hie \
+    && rm /root/.local/bin/hie-${GHC_MAIN_VERSION} \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
