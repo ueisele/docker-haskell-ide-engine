@@ -2,10 +2,12 @@ FROM debian:stretch-slim
 
 ARG SOURCE_GIT_REPOSITORY
 ARG SOURCE_GIT_COMMIT
+ARG DOCKERFILE_URL
 
 LABEL maintainer="code@uweeisele.eu" \
       source.git.repository=${SOURCE_GIT_REPOSITORY} \
-      source.git.commit=${SOURCE_GIT_COMMIT}
+      source.git.commit=${SOURCE_GIT_COMMIT} \
+      dockerfile.url=${DOCKERFILE_URL}
 
 ARG GHC_MAIN_VERSION=8.6
 ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
@@ -84,9 +86,17 @@ RUN cd /opt \
     && rm /root/.local/bin/hie-${GHC_MAIN_VERSION} \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
+    #&& stack clean \
+    #&& rm -rf $STACK_ROOT \
+    #&& rm /root/.local/bin/hie* \
+    #&& mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
+    #&& mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
+    #&& ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
+    #&& ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
 # Finally setup stack
-RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION}
+RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION} \
+    && stack update
 RUN stack config set system-ghc --global true \
     && stack config set install-ghc --global false \
     # set the resolver

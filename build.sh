@@ -6,6 +6,7 @@ ROOT_DIR=$(pwd)
 popd > /dev/null
 
 DOCKERIMAGE_REPO="ueisele/haskell-stack-hie"
+GITHUB_REPO_URL="https://github.com/ueisele/docker-haskell-hie"
 
 PUSH=false
 BUILD=false
@@ -56,11 +57,17 @@ function parseCmd () {
 }
 
 function resolveRepo () {
+    pushd . > /dev/null
+    cd $ROOT_DIR
     git config --get remote.origin.url
+    popd > /dev/null
 }
 
 function resolveCommit () {
+    pushd . > /dev/null
+    cd $ROOT_DIR
     git rev-list --abbrev-commit --abbrev=7 -1 master ${DOCKERFILE_DIR}
+    popd > /dev/null
 }
 
 function resolveBuildTimestamp() {
@@ -84,12 +91,16 @@ function resolveImageTags () {
 }
 
 function build () {
+    local gitRepo=$(resolveRepo)
+    local commit=$(resolveCommit)
+    local dockerfileUrl=${GITHUB_REPO_URL}/blob/${commit}/${DOCKERFILE_DIR}/Dockerfile
     pushd . > /dev/null
     cd $ROOT_DIR
     docker build -t ${DOCKERIMAGE_REPO}:${DOCKERFILE_DIR} \
         -f ${DOCKERFILE_DIR}/Dockerfile \
-        --build-arg SOURCE_GIT_REPOSITORY=$(resolveRepo) \
-        --build-arg SOURCE_GIT_COMMIT=$(resolveCommit) \
+        --build-arg SOURCE_GIT_REPOSITORY=${gitRepo} \
+        --build-arg SOURCE_GIT_COMMIT=${commit} \
+        --build-arg DOCKERFILE_URL=${dockerfileUrl} \
         ${DOCKERFILE_DIR}
     popd > /dev/null
 }
