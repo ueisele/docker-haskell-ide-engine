@@ -4,12 +4,6 @@ LABEL maintainer="code@uweeisele.eu"
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
 
-# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries
-ARG STACK_ROOT=/root/.stack
-ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
-
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
@@ -35,6 +29,7 @@ RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${ST
 
 # Use 'stack' to install basic Haskell tools like cabal, alex and happy
 ARG STACK_RESOLVER=lts-14.20
+ARG STACK_ROOT=/root/.stack
 RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
         # Inastall tool cabal
         cabal-install \ 
@@ -70,13 +65,6 @@ RUN cd /opt \
     && rm /root/.local/bin/hie-${GHC_MAIN_VERSION} \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
     && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
-    #&& stack clean \
-    #&& rm -rf $STACK_ROOT \
-    #&& rm /root/.local/bin/hie* \
-    #&& mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie) /root/.local/bin/hie-${GHC_VERSION} \
-    #&& mv $(readlink -f /opt/haskell-ide-engine/.stack-work/install/x86_64-linux/*/${GHC_VERSION}/bin/hie-wrapper) /root/.local/bin/hie-wrapper \
-    #&& ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
-    #&& ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
 # Finally setup stack
 RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION}
@@ -85,6 +73,11 @@ RUN stack config set system-ghc --global true \
     && stack config set install-ghc --global false \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
+
+# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
 
 # Install pid1 init daemon
 ARG PID1_VERSION=0.1.2.0
