@@ -1,31 +1,11 @@
 FROM debian:stretch-slim
-
-ARG SOURCE_GIT_REPOSITORY
-ARG SOURCE_GIT_COMMIT
-ARG DOCKERFILE_URL
-
-LABEL maintainer="code@uweeisele.eu" \
-      source.git.repository=${SOURCE_GIT_REPOSITORY} \
-      source.git.commit=${SOURCE_GIT_COMMIT} \
-      dockerfile.url=${DOCKERFILE_URL}
-
-ARG GHC_MAIN_VERSION=8.6
-ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
-ARG STACK_RESOLVER=lts-14.20
-ARG STACK_VERSION=2.1.3
-ARG STACK_ROOT=/root/.stack
-ARG HIE_VERSION=1.0.0.0
-ARG PID1_VERSION=0.1.2.0
-
-LABEL ghc.version=${GHC_VERSION} \
-      stack.resolver=${STACK_RESOLVER} \
-      stack.version=${STACK_VERSION} \
-      hie.version=${HIE_VERSION}
+LABEL maintainer="code@uweeisele.eu"
 
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
 
 # Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries
+ARG STACK_ROOT=/root/.stack
 ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
@@ -49,11 +29,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 ENV DEBIAN_FRONTEND=dialog
 
-
 # Install stack
+ARG STACK_VERSION=2.1.3
 RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${STACK_VERSION}/stack-${STACK_VERSION}-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C /usr/bin '*/stack'
 
 # Use 'stack' to install basic Haskell tools like cabal, alex and happy
+ARG STACK_RESOLVER=lts-14.20
 RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
         # Inastall tool cabal
         cabal-install \ 
@@ -70,6 +51,9 @@ RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin insta
     && rm -rf $STACK_ROOT
 
 # Install haskell ide engine
+ARG GHC_MAIN_VERSION=8.6
+ARG GHC_VERSION=${GHC_MAIN_VERSION}.5
+ARG HIE_VERSION=1.0.0.0
 RUN cd /opt \
     && git clone https://github.com/haskell/haskell-ide-engine.git --recurse-submodules \
     && cd haskell-ide-engine \
@@ -95,16 +79,32 @@ RUN cd /opt \
     #&& ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
 # Finally setup stack
-RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION} \
-    && stack update
+RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION}
+RUN stack update
 RUN stack config set system-ghc --global true \
     && stack config set install-ghc --global false \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
 
 # Install pid1 init daemon
+ARG PID1_VERSION=0.1.2.0
 RUN wget -qO- https://github.com/fpco/pid1/releases/download/v${PID1_VERSION}/pid1-${PID1_VERSION}-linux-x86_64.tar.gz | tar xz -C /usr/local
 
 # Set up pid1 entrypoint and default command
 ENTRYPOINT ["/usr/local/sbin/pid1"]
 CMD ["/bin/bash"]
+
+# Set Git related labels
+ARG SOURCE_GIT_REPOSITORY
+ARG SOURCE_GIT_COMMIT
+ARG DOCKERFILE_URL
+
+LABEL source.git.repository=${SOURCE_GIT_REPOSITORY} \
+      source.git.commit=${SOURCE_GIT_COMMIT} \
+      dockerfile.url=${DOCKERFILE_URL}
+
+# Set Haskell related labels
+LABEL ghc.version=${GHC_VERSION} \
+      stack.resolver=${STACK_RESOLVER} \
+      stack.version=${STACK_VERSION} \
+      hie.version=${HIE_VERSION}
