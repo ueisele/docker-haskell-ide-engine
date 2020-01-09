@@ -1,8 +1,13 @@
 FROM debian:stretch-slim
 LABEL maintainer="code@uweeisele.eu"
 
+# Set encoding to UTF-8
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 # Create symlink bind directory for build or haskell ide engine
 RUN mkdir -p $HOME/.local/bin
+ENV PATH=$HOME/.local/bin:$PATH
 
 # Configure apt
 ENV DEBIAN_FRONTEND=noninteractive
@@ -29,8 +34,8 @@ RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v${ST
 
 # Use 'stack' to install basic Haskell tools like cabal, alex and happy
 ARG STACK_RESOLVER=lts-14.20
-ARG STACK_ROOT=/root/.stack
-RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin install \
+ARG STACK_ROOT=$HOME/.stack
+RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=$HOME/.local/bin install \
         # Inastall tool cabal
         cabal-install \ 
         # Haskell GHCI VS Code Debug Adapter (https://marketplace.visualstudio.com/items?itemName=phoityne.phoityne-vscode)
@@ -40,10 +45,11 @@ RUN stack --resolver="${STACK_RESOLVER}" --local-bin-path=/root/.local/bin insta
     # Update Cabal index
     && cabal v2-update \
     # Configure hlint
-    && mkdir /root/.local/bin/data \
-    && touch /root/.local/bin/data/hlint.yaml \
+    && mkdir $HOME/.local/bin/data \
+    && touch $HOME/.local/bin/data/hlint.yaml \
     # Clean up  
     && rm -rf $STACK_ROOT
+ENV PATH=$HOME/.cabal/bin:$PATH
 
 # Install haskell ide engine
 ARG GHC_MAIN_VERSION=8.6
@@ -61,23 +67,19 @@ RUN cd /opt \
     # Clean up
     && rm -rf /opt/haskell-ide-engine \
     && rm -rf $STACK_ROOT \
-    && rm /root/.local/bin/hie \
-    && rm /root/.local/bin/hie-${GHC_MAIN_VERSION} \
-    && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
-    && ln -s /root/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
+    && rm $HOME/.local/bin/hie \
+    && rm $HOME/.local/bin/hie-${GHC_MAIN_VERSION} \
+    && ln -s $HOME/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie \
+    && ln -s $HOME/.local/bin/hie-${GHC_VERSION} /root/.local/bin/hie-${GHC_MAIN_VERSION}
 
 # Finally setup stack
 RUN stack setup --resolver="${STACK_RESOLVER}" ghc-${GHC_VERSION}
 RUN stack update
+ENV PATH=${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
 RUN stack config set system-ghc --global true \
     && stack config set install-ghc --global false \
     # set the resolver
     && stack --resolver="${STACK_RESOLVER}" exec -- ghc --version
-
-# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries
-ENV LANG=C.UTF-8 \
-    LC_ALL=C.UTF-8 \
-    PATH=/root/.cabal/bin:/root/.local/bin:${STACK_ROOT}/programs/x86_64-linux/ghc-${GHC_VERSION}/bin:$PATH
 
 # Install pid1 init daemon
 ARG PID1_VERSION=0.1.2.0
