@@ -48,7 +48,8 @@ jobs:
           --build-arg STACK_RESOLVER=${{ matrix.resolver }} \
           --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA") \
           --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }} \
-          --tag ueisele/haskell-dev:${{ matrix.resolver }}
+          --tag ueisele/haskell-dev:${{ matrix.resolver }} \
+          --push
 
     - name: Move cache
       run: |
