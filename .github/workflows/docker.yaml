@@ -12,14 +12,11 @@ jobs:
   docker:
     strategy:
       fail-fast: false
-      max-parallel: 0
       matrix:
-        resolver: ["lts-18.21", "nightly-2022-01-15"]
+        resolver: ["lts-18.21"]
         include:
         - resolver: lts-18.21
           ghc: 8.10.7
-        - resolver: nightly-2022-01-15
-          ghc: 9.0.2
 
     runs-on: ubuntu-latest
     steps:
@@ -42,6 +39,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
+        docker buildx create --use --driver docker-container
         docker buildx build ./.devcontainer/ -f ./.devcontainer/Dockerfile \
           --build-arg GHC_VERSION=${{ matrix.ghc }} \
           --build-arg STACK_RESOLVER=${{ matrix.resolver }} \
