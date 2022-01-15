@@ -11,8 +11,8 @@ on:
 jobs:
   docker:
     strategy:
-      fail-fast: true
-      max-parallel: 2
+      fail-fast: false
+      max-parallel: 0
       matrix:
         resolver: ["lts-18.21", "nightly-2022-01-15"]
         include:
@@ -32,12 +32,27 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.docker-build-cache
+        key: docker-build-cache-${{ github.sha }}
+        restore-keys: |
+          docker-build-cache
+
     - name: Build the Docker image
       run: |
-        docker build ./.devcontainer/ -f ./.devcontainer/Dockerfile \
+        docker buildx build ./.devcontainer/ -f ./.devcontainer/Dockerfile \
           --build-arg GHC_VERSION=${{ matrix.ghc }} \
           --build-arg STACK_RESOLVER=${{ matrix.resolver }} \
-          --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA")
+          --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA") \
+          --cache-from type=local,src=/tmp/.docker-build-cache \
+          --cache-to type=local,src=/tmp/.docker-build-cache-new
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.docker-build-cache
+        mv /tmp/.docker-build-cache-new /tmp/.docker-build-cache
 
     - name: Push the Docker image
       run: |
