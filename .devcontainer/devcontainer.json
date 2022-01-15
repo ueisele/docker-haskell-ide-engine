@@ -1,0 +1,34 @@
+// see https://github.com/vzarytovskii/haskell-dev-env/blob/master/.devcontainer/devcontainer.json
+{
+	"name": "Haskell",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "GHC_VERSION": "8.10.7",
+            "STACK_RESOLVER": "lts-18.21"
+        }
+    },
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"hoogle-vscode.useCabalDependencies": true
+	},
+	
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"haskell.haskell",
+		"phoityne.phoityne-vscode",
+        "jcanero.hoogle-vscode",
+        "eriksik2.vscode-ghci",
+		"asciidoctor.asciidoctor-vscode"
+	],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "stack --allow-different-user setup && stack update && stack hoogle && ghc --version",
+
+	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "haskell"
+}
