@@ -37,29 +37,19 @@ jobs:
         restore-keys: |
           docker-build-cache
 
-    - name: Build the Docker image
+    - name: Build and push the Docker image
       run: |
         docker buildx create --use --driver docker-container
         docker buildx build ./.devcontainer/ -f ./.devcontainer/Dockerfile \
+          --cache-from type=local,src=/tmp/.docker-build-cache \
+          --cache-to type=local,dest=/tmp/.docker-build-cache-new \
           --build-arg GHC_VERSION=${{ matrix.ghc }} \
           --build-arg STACK_RESOLVER=${{ matrix.resolver }} \
           --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA") \
-          --cache-from type=local,src=/tmp/.docker-build-cache \
-          --cache-to type=local,src=/tmp/.docker-build-cache-new
+          --tag ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }} \
+          --tag ueisele/haskell-dev:${{ matrix.resolver }}
 
     - name: Move cache
       run: |
         rm -rf /tmp/.docker-build-cache
         mv /tmp/.docker-build-cache-new /tmp/.docker-build-cache
-
-    - name: Push the Docker image
-      run: |
-        docker tag \
-          ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA") \
-          ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}
-        docker tag \
-          ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA") \
-          ueisele/haskell-dev:${{ matrix.resolver }}
-        docker push ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}-$(git rev-parse --short "$GITHUB_SHA")
-        docker push ueisele/haskell-dev:${{ matrix.resolver }}-${{ matrix.ghc }}
-        docker push ueisele/haskell-dev:${{ matrix.resolver }}
