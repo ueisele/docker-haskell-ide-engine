@@ -35,9 +35,10 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.docker-build-cache
-        key: docker-build-cache-${{ matrix.resolver }}-${{ github.sha }}
+        key: docker-build-cache-${{ matrix.ghc }}-${{ matrix.resolver }}-${{ github.sha }}
         restore-keys: |
-          docker-build-cache-${{ matrix.resolver }}-
+          docker-build-cache-${{ matrix.ghc }}-${{ matrix.resolver }}-
+          docker-build-cache-${{ matrix.ghc }}-
           docker-build-cache-
 
     - name: Build and push the Docker image
