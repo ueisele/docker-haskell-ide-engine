@@ -13,7 +13,7 @@ RUN apt-get update \
         ca-certificates hostname net-tools curl wget telnet \
         tar gzip xz-utils less vim git \
         make gcc g++ \
-        libicu-dev libtinfo5 libtinfo-dev libgmp10 libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi7 libffi-dev libncurses5 libncurses-dev z3 \
+        libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev libncurses-dev libnuma-dev z3 \
     && apt-get -y clean \
     && rm -rf /var/lib/apt/lists/*
 
