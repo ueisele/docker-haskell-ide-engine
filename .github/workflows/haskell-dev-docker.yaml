@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Haskell Dev Docker Image CI
 on:
   push:
     paths:
@@ -13,12 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        resolver: ["lts-18.22", "nightly-2022-01-20"]
+        resolver: ["lts-18.22"]
         include:
         - resolver: lts-18.22
           ghc: 8.10.7
-        - resolver: nightly-2022-01-20
-          ghc: 9.0.2
 
     runs-on: ubuntu-latest
     steps:
