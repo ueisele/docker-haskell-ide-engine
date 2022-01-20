@@ -39,7 +39,7 @@ ARG GHCUP_VERSION=0.1.17.4
 ARG GHCUP_BINDIR=/home/${HASKELL_USER}/.ghcup/bin
 RUN mkdir -p ${GHCUP_BINDIR}
 ENV PATH=${GHCUP_BINDIR}:${PATH}
-RUN curl -sL -o ${GHCUP_BINDIR}/ghcup https://downloads.haskell.org/~ghcup/0.1.17.4/x86_64-linux-ghcup-${GHCUP_VERSION} \
+RUN curl -sL -o ${GHCUP_BINDIR}/ghcup https://downloads.haskell.org/~ghcup/${GHCUP_VERSION}/x86_64-linux-ghcup-${GHCUP_VERSION} \
     && chmod +x ${GHCUP_BINDIR}/ghcup
 
 # Install and setup GHC
@@ -53,7 +53,7 @@ RUN ghcup install stack ${STACK_VERSION}
 RUN stack config set system-ghc true --global \
     && stack config set install-ghc false --global
 RUN printf "ghc-options:\n  \"\$everything\": -haddock\n" >> /home/${HASKELL_USER}/.stack/config.yaml
-ARG STACK_RESOLVER=lts-18.21
+ARG STACK_RESOLVER=lts-18.22
 RUN stack --resolver=${STACK_RESOLVER} --compiler=ghc-${GHC_VERSION} setup \
     && cd /home/${HASKELL_USER}/.stack \
     && find . -type f \

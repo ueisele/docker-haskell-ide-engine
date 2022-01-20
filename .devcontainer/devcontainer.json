@@ -1,13 +1,14 @@
 // see https://github.com/vzarytovskii/haskell-dev-env/blob/master/.devcontainer/devcontainer.json
 {
 	"name": "Haskell",
-    "build": {
-        "dockerfile": "Dockerfile",
-        "args": {
-            "GHC_VERSION": "8.10.7",
-            "STACK_RESOLVER": "lts-18.21"
-        }
-    },
+	"image": "ueisele/haskell-dev:lts-18.22-8.10.7",
+    // "build": {
+    //     "dockerfile": "Dockerfile",
+    //     "args": {
+    //         "GHC_VERSION": "8.10.7",
+    //         "STACK_RESOLVER": "lts-18.22"
+    //     }
+    // },
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": {

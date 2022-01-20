@@ -1,1 +1,54 @@
 = Try Out Development Containers: Haskell
+
+== What is it?
+
+A link:https://code.visualstudio.com/docs/remote/containers[development container] is a running Docker container with a well-defined tool/runtime stack and its prerequisites.
+
+This is a sample project that lets you try out Haskell with Visual Studio Code. It provides an environment for Visual Studio Code, allowing automatically installing the Haskell compiler (GHC), Stack, and HLS (Haskell Language Server), and the necessary Visual Studio Code extensions to set up a Haskell development environment with zero additional effort.
+
+This was initially based on link:https://github.com/vzarytovskii/haskell-dev-env[Docker image for Haskell development] by link:https://github.com/vzarytovskii[Vlad Zarytovskii].
+
+== How to Use it?
+
+Follow the link:https://code.visualstudio.com/docs/remote/containers#_getting-started[Getting Started] instructions to configure your Visual Studio Code and Docker to use with DevContainers.
+
+Place the `.devcontainer` directory in the root of your project, and the next time you load the project, Visual Studio Code will prompt to re-open the project in a container.
+
+== How does it work?
+
+Visual Studio Code supports link:https://code.visualstudio.com/docs/remote/containers[Developing inside a Container] - using a Docker image as a development environment. It automates the process of creating the container image, as well as installing additional required extensions into the editor.
+
+Pressing *Reopen in Container* will perform the automated steps to launch the container, and set up the environment.
+
+For more information and setup, read the official documentation: https://code.visualstudio.com/docs/remote/containers and https://code.visualstudio.com/docs/remote/containers-advanced
+
+== What's in the box?
+
+`link:.devcontainer/Dockerfile[.devcontainer/Dockerfile]` DevContainer Docker image.
+
+`link:https://hub.docker.com/_/debian[debian:11.2-slim]` as base image.
+
+Additional software installed:
+
+* link:https://www.haskell.org/ghc/[Glasgow Haskell Compiler (GHC)] via link:https://www.haskell.org/ghcup/[ghcup].
+* link:https://docs.haskellstack.org/en/stable/README/[Stack] including pre-installed link:https://www.stackage.org/[Stackage package].
+* A Haskell LSP server link:https://github.com/haskell/haskell-language-server[HLS (Haskell Language Server)].
+* Following Debian packages: _procps sudo ca-certificates hostname net-tools curl wget telnet tar gzip xz-utils less vim git make gcc g++ libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev libncurses-dev libnuma-dev z3_
+* Following Haskell packages (via Stack): _hoogle ormolu retrie hlint apply-refact haskell-dap ghci-dap haskell-debug-adapter_
+
+Following VSCode extensions are installed after container is started:
+
+* link:https://marketplace.visualstudio.com/items?itemName=haskell.haskell[Haskell extension]
+* link:https://marketplace.visualstudio.com/items?itemName=phoityne.phoityne-vscode[Haskell GHCi Debugger Adapter]
+* link:https://marketplace.visualstudio.com/items?itemName=eriksik2.vscode-ghci[Integrated Haskell Shell]
+* link:https://marketplace.visualstudio.com/items?itemName=jcanero.hoogle-vscode[Hoogle for VSCode]
+* link:https://marketplace.visualstudio.com/items?itemName=asciidoctor.asciidoctor-vscode[AsciiDoc for VSCode]
+
+The Docker image is pre-build in a link:.github/workflows/docker.yaml[GitHub Action pipeline] and provided on link:https://hub.docker.com/repository/docker/ueisele/haskell-dev[Docker Hub].
+
+You can also run the Docker image independent of Visual Studio Code:
+
+[source,bash]
+----
+docker run --rm -it ueisele/haskell-dev:lts-18.22-8.10.7 ghci
+----

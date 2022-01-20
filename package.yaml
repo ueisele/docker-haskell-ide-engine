@@ -1,10 +1,10 @@
-name:                try-haskell
+name:                vscode-remote-try-haskell
 version:             0.1.0.0
-github:              "githubuser/try-haskell"
+github:              "ueisele/vscode-remote-try-haskell"
 license:             "Apache2"
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2022 Author name here"
+author:              "Uwe Eisele"
+maintainer:          "code@uweeisele.eu"
+copyright:           "2022 Uwe Eisele"
 
 extra-source-files:
 - README.adoc
@@ -16,7 +16,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/ueisele/try-haskell#readme>
+description:         Please see the README on GitHub at <https://github.com/ueisele/vscode-remote-try-haskell>
 
 dependencies:
 - base >= 4.7 && < 5
@@ -25,7 +25,7 @@ library:
   source-dirs: src
 
 executables:
-  try-haskell-exe:
+  vscode-remote-try-haskell-exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -33,10 +33,10 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - try-haskell
+    - vscode-remote-try-haskell
 
 tests:
-  try-haskell-test:
+  vscode-remote-try-haskell-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -44,4 +44,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - try-haskell
+    - vscode-remote-try-haskell

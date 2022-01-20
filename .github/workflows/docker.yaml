@@ -13,11 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        resolver: ["lts-18.21", "nightly-2022-01-15"]
+        resolver: ["lts-18.22", "nightly-2022-01-20"]
         include:
-        - resolver: lts-18.21
+        - resolver: lts-18.22
           ghc: 8.10.7
-        - resolver: nightly-2022-01-15
+        - resolver: nightly-2022-01-20
           ghc: 9.0.2
 
     runs-on: ubuntu-latest
