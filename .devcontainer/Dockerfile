@@ -11,7 +11,7 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends \
         procps sudo \
         ca-certificates hostname net-tools curl wget telnet \
-        tar gzip xz-utils less vim git \
+        tar gzip xz-utils less vim git openssh-client gnupg2 \
         make gcc g++ \
         libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev libncurses-dev libnuma-dev z3 \
     && apt-get -y clean \

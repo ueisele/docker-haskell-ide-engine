@@ -33,7 +33,7 @@ Additional software installed:
 * link:https://www.haskell.org/ghc/[Glasgow Haskell Compiler (GHC)] via link:https://www.haskell.org/ghcup/[ghcup].
 * link:https://docs.haskellstack.org/en/stable/README/[Stack] including pre-installed link:https://www.stackage.org/[Stackage package].
 * A Haskell LSP server link:https://github.com/haskell/haskell-language-server[HLS (Haskell Language Server)].
-* Following Debian packages: _procps sudo ca-certificates hostname net-tools curl wget telnet tar gzip xz-utils less vim git make gcc g++ libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev libncurses-dev libnuma-dev z3_
+* Following Debian packages: _procps sudo ca-certificates hostname net-tools curl wget telnet tar gzip xz-utils less vim git openssh-client gnupg2 make gcc g++ libicu-dev libtinfo-dev libgmp-dev zlib1g-dev libsqlite3-dev libc6-dev libffi-dev libncurses-dev libnuma-dev z3_
 * Following Haskell packages (via Stack): _hoogle ormolu retrie hlint apply-refact haskell-dap ghci-dap haskell-debug-adapter_
 
 Following VSCode extensions are installed after container is started:

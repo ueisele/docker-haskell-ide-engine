@@ -3,7 +3,7 @@
 	"name": "Haskell",
 	"image": "ueisele/haskell-dev:lts-18.22-8.10.7",
     // "build": {
-    //     "dockerfile": "Dockerfile",
+    //    "dockerfile": "Dockerfile",
     //     "args": {
     //         "GHC_VERSION": "8.10.7",
     //         "STACK_RESOLVER": "lts-18.22"
